@@ -9,6 +9,6 @@ fun readDataFile(name: String): List<String> {
 
 fun <T>expectResult(actual: T, expected: T) {
     if (actual != expected) {
-        throw Exception("expected $expected to be $actual")
+        throw Exception("expected $actual to be $expected")
     }
 }
