@@ -6,6 +6,8 @@ import tboyt.aoc2019.util.expectResult
 fun main() {
     val testInput = readDataFile("day06-test-b")
     expectResult(countTransfers(testInput), 4)
+    val input = readDataFile("day06")
+    println(countTransfers(input))
 }
 
 data class Planet(val name: String) {
@@ -13,13 +15,47 @@ data class Planet(val name: String) {
     var parentOrbit: Planet? = null;
 }
 
-fun findShortestRoute(start: Planet, targetName: String): ArrayList<String> {
-    val searchTargets = if (start.parentOrbit != null) {
-        listOf(start.parentOrbit).plus(start.orbitChildren)
-    } else {
-        start.orbitChildren
+/**
+ * Breadth first strategy. Look 1 node out, 2 nodes out, 3 nodes out, etc
+ * until target node is found. Then it's that many nodes.
+ */
+fun findShortestRoute(start: Planet, targetName: String): Int {
+    val seenPlanets = mutableSetOf<Planet>()
+    val queue = arrayListOf<Planet>()
+
+    fun checkPlanet(planet: Planet): Boolean {
+        if (planet.name == targetName) {
+            return true
+        }
+        var links = planet.orbitChildren
+        if (planet.parentOrbit != null) {
+            links.add(planet.parentOrbit!!)
+        }
+        val unseenLinks = links.minus(seenPlanets)
+        unseenLinks.forEach { queue.add(it) }
+        seenPlanets.addAll(unseenLinks)
+        return false
     }
-    // TODO: ?!?!?!?!?
+
+    queue.add(start)
+    seenPlanets.add(start)
+
+    var depth = 0
+    while (queue.size > 0) {
+        depth += 1
+
+        val planetsForDepth = queue.toMutableList()
+        queue.clear()
+
+        for (planet in planetsForDepth) {
+            val found = checkPlanet(planet)
+            if (found) {
+                return depth - 3
+            }
+        }
+    }
+
+    throw Exception("No route found")
 }
 
 fun countTransfers(input: List<String>): Int {
@@ -44,6 +80,5 @@ fun countTransfers(input: List<String>): Int {
     val youPlanet = planetMap["YOU"] ?: throw Exception("missing YOU planet")
 
     val route = findShortestRoute(youPlanet, "SAN")
-    println(route)
-    return route.size
+    return route
 }
